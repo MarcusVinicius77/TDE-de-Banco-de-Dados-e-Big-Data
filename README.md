@@ -37,11 +37,17 @@ IMPORTANTE: Deixa o terminal aberto rodando. Se fechar o VS Code, o site cai e a
 Os links só funcionam se o servidor estiver rodando. Não adianta abrir o link com o VS Code fechado.
 
 Passo 1: Abre o VS Code e abre o terminal (Ctrl + aspas)
+
 Passo 2: Roda: python app_integracao.py
+
 Passo 3: Espera aparecer: Running on http://127.0.0.1:5000
+
 Passo 4: DEIXA O TERMINAL ABERTO. Não fecha o VS Code.
+
 Passo 5: Agora sim abre o Chrome e cola o link.
+
 Passo 6: Se aparecer ERR_CONNECTION_REFUSED ou "Não é possível aceder a este site", é porque o servidor parou. Volta no VS Code, roda python app_integracao.py de novo e aperta F5 no navegador.
+
 Passo 7: Para parar o servidor no final, aperta Ctrl + C no terminal do VS Code.
 
 ### Links para testar (com o servidor rodando)
@@ -67,11 +73,17 @@ curl -X POST http://127.0.0.1:5000/pedidos -H "Content-Type: application/json" -
 
 ## O que a integração usa do banco do colega
 VIEW vw_pedidos_completos - Rota /pedidos
+
 VIEW vw_produtos_restaurantes - Rota /produtos
+
 PROCEDURE consultar_pedidos_cliente - Rota /pedidos/cliente/1
+
 FUNCTION calcular_total_pedido - Rota /pedidos/1/total
+
 TRIGGER trg_historico_pedidos - Rota PUT /pedidos/1/status
+
 Transação com COMMIT / ROLLBACK - Rota POST /pedidos
+
 JOIN produtos mais vendidos - Rota /relatorio/mais-vendidos
 
 ## Arquivos da minha parte
