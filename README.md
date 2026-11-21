@@ -46,11 +46,17 @@ Passo 7: Para parar o servidor no final, aperta Ctrl + C no terminal do VS Code.
 
 ### Links para testar (com o servidor rodando)
 http://127.0.0.1:5000/
+
 http://127.0.0.1:5000/pedidos
+
 http://127.0.0.1:5000/produtos
+
 http://127.0.0.1:5000/pedidos/cliente/1
+
 http://127.0.0.1:5000/pedidos/1/total
+
 http://127.0.0.1:5000/historico
+
 http://127.0.0.1:5000/relatorio/mais-vendidos
 
 Resultado do teste principal: {"status": "Integracao OK", "msg": "Python conectado no db_delivery_local!"}
