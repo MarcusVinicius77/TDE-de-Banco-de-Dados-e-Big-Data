@@ -1,29 +1,69 @@
 # Sistema de Delivery Local - Banco de Dados
 Turma: 4º Período de Sistemas de Informação
-Equipe: Marcus Vinicius, Ricardo Henrique, Ytalo Emanuel e Ronaldo Lima
+Equipe: Marcus Vinicius, Ricardo Henrique, Ytalo Emanuel, Ronaldo Lima
 
-## Item 1 ao 5 - Criação da DB, povoamento, PK/FK, JOIN, script comentado e PDF
+## Minha parte: Integração do MySQL através do VS Code
+Responsável: Marcus Vinicius de Sousa Reis
 
-Banco: `db_delivery_local`
-Arquivo base: `db_delivery_01.sql`
+### O que eu fiz
+Fiz a integração do banco de dados MySQL com o Python, usando o VS Code.
+O banco db_delivery_local foi criado pelo colega no arquivo db_delivery_01.sql.
+Eu fiz a parte de conectar esse banco no Python e testar a integração.
 
-### O que o banco tem
-- Tabelas: Clientes, Restaurantes, Produtos, Pedidos, Itens_Pedido, Entregadores, Historico_Pedidos
-- PK e FK em todas as tabelas
-- Views: vw_pedidos_completos, vw_produtos_restaurantes
-- Procedure: consultar_pedidos_cliente
-- Function: calcular_total_pedido
-- Trigger: trg_historico_pedidos
-- Transações com COMMIT / ROLLBACK
-- Consultas avançadas com JOIN
+## Passo a passo completo - Comandos da Integração
 
----
+### 1. Criar o banco no MySQL Workbench
+No MySQL Workbench: File > Open SQL Script > Abrir db_delivery_01.sql > Clicar no raio para rodar. Isso cria o banco db_delivery_local.
 
-## Integração Backend Python - Marcus Vinicius
+### 2. Abrir o projeto no VS Code
+cd "C:\Users\vinic\Documents\projetos-backend"
+code .
 
-Pasta: `integracao-backend-python/`
-
-### Como rodar
-```bash
+### 3. Instalar dependências
+pip install flask
+pip install mysql-connector-python
 pip install -r requirements.txt
+
+Conteúdo do requirements.txt:
+flask
+mysql-connector-python
+
+### 4. Configuração da conexão no app_integracao.py
+def conectar():
+    return mysql.connector.connect(host='localhost', user='root', password='Sh@zam123', database='db_delivery_local')
+
+### 5. Rodar a integração no terminal do VS Code
 python app_integracao.py
+Tem que aparecer: Running on http://127.0.0.1:5000
+
+### 6. Testar no navegador
+http://127.0.0.1:5000/
+http://127.0.0.1:5000/pedidos
+http://127.0.0.1:5000/produtos
+http://127.0.0.1:5000/pedidos/cliente/1
+http://127.0.0.1:5000/pedidos/1/total
+http://127.0.0.1:5000/historico
+http://127.0.0.1:5000/relatorio/mais-vendidos
+
+Resultado: {"status": "Integracao OK", "msg": "Python conectado no db_delivery_local!"}
+
+### 7. Testar PUT e POST (Trigger e Transação)
+curl -X PUT http://127.0.0.1:5000/pedidos/1/status -H "Content-Type: application/json" -d "{\"status\": \"Entregue\"}"
+curl -X POST http://127.0.0.1:5000/pedidos -H "Content-Type: application/json" -d "{\"id_cliente\": 1, \"id_restaurante\": 1, \"itens\": [{\"id_produto\": 1, \"quantidade\": 2}]}"
+
+### 8. Parar o servidor
+No terminal do VS Code: Ctrl + C
+
+## O que a integração usa do banco do colega
+VIEW vw_pedidos_completos - Rota /pedidos
+VIEW vw_produtos_restaurantes - Rota /produtos
+PROCEDURE consultar_pedidos_cliente - Rota /pedidos/cliente/1
+FUNCTION calcular_total_pedido - Rota /pedidos/1/total
+TRIGGER trg_historico_pedidos - Rota PUT /pedidos/1/status
+Transação com COMMIT / ROLLBACK - Rota POST /pedidos
+JOIN produtos mais vendidos - Rota /relatorio/mais-vendidos
+
+## Arquivos da minha parte
+integracao-backend-python/app_integracao.py
+integracao-backend-python/requirements.txt
+integracao-backend-python/README.md
