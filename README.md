@@ -87,6 +87,9 @@ Transação com COMMIT / ROLLBACK - Rota POST /pedidos
 JOIN produtos mais vendidos - Rota /relatorio/mais-vendidos
 
 ## Arquivos da minha parte
+
 integracao-backend-python/app_integracao.py
+
 integracao-backend-python/requirements.txt
+
 integracao-backend-python/README.md
