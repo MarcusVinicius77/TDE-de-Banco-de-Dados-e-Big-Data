@@ -6,4 +6,4 @@ http://127.0.0.1:5000/pedidos/1/total
 http://127.0.0.1:5000/historico
 http://127.0.0.1:5000/relatorio/mais-vendidos
 
-obs: só poderá rodas os links se fizer a ativação no vscode com o comando ( python app_integracao.py )
+obs: só poderá rodas os links se fizer a ativação no vs code 
