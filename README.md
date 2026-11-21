@@ -68,7 +68,9 @@ http://127.0.0.1:5000/relatorio/mais-vendidos
 Resultado do teste principal: {"status": "Integracao OK", "msg": "Python conectado no db_delivery_local!"}
 
 ### Testar PUT e POST (Trigger e Transação)
+
 curl -X PUT http://127.0.0.1:5000/pedidos/1/status -H "Content-Type: application/json" -d "{\"status\": \"Entregue\"}"
+
 curl -X POST http://127.0.0.1:5000/pedidos -H "Content-Type: application/json" -d "{\"id_cliente\": 1, \"id_restaurante\": 1, \"itens\": [{\"id_produto\": 1, \"quantidade\": 2}]}"
 
 ## O que a integração usa do banco do colega
