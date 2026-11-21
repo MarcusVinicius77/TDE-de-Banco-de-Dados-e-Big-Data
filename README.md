@@ -13,7 +13,9 @@ code .
 
 ### 3. Instalar dependências
 pip install flask
+
 pip install mysql-connector-python
+
 pip install -r requirements.txt
 
 Conteúdo do requirements.txt:
