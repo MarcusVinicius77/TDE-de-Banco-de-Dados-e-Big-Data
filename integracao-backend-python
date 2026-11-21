@@ -1,0 +1,103 @@
+# ============================================================
+# INTEGRACAO - BACKEND PYTHON + MYSQL
+# Aluno responsavel pela integracao: Marcus Vinicius
+# Turma: 4 Periodo de Sistema de Informacao
+# Equipe: Marcus Vinicius, Ricardo Henrique, Ytalo Emanuel
+# Banco base: db_delivery_01.sql - db_delivery_local
+# ============================================================
+from flask import Flask, jsonify, request
+import mysql.connector
+
+app = Flask(__name__)
+
+def conectar():
+    return mysql.connector.connect(host='localhost', user='root', password='Sh@zam123', database='db_delivery_local')
+
+@app.route('/')
+def home():
+    try:
+        db = conectar(); db.close()
+        return jsonify({'status': 'Integracao OK', 'msg': 'Python conectado no db_delivery_local!'})
+    except Exception as e:
+        return jsonify({'status': 'Erro', 'erro': str(e)}), 500
+
+# VIEW vw_pedidos_completos do colega
+@app.route('/pedidos')
+def listar_pedidos():
+    db = conectar(); cursor = db.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM vw_pedidos_completos')
+    dados = cursor.fetchall(); cursor.close(); db.close()
+    return jsonify(dados)
+
+# VIEW vw_produtos_restaurantes do colega
+@app.route('/produtos')
+def listar_produtos():
+    db = conectar(); cursor = db.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM vw_produtos_restaurantes')
+    dados = cursor.fetchall(); cursor.close(); db.close()
+    return jsonify(dados)
+
+# PROCEDURE consultar_pedidos_cliente do colega
+@app.route('/pedidos/cliente/<int:id_cliente>')
+def pedidos_do_cliente(id_cliente):
+    db = conectar(); cursor = db.cursor(dictionary=True)
+    cursor.callproc('consultar_pedidos_cliente', [id_cliente])
+    for result in cursor.stored_results():
+        dados = result.fetchall()
+    cursor.close(); db.close()
+    return jsonify(dados)
+
+# FUNCTION calcular_total_pedido do colega
+@app.route('/pedidos/<int:id_pedido>/total')
+def total_pedido(id_pedido):
+    db = conectar(); cursor = db.cursor(dictionary=True)
+    cursor.execute('SELECT calcular_total_pedido(%s) AS total', (id_pedido,))
+    total = cursor.fetchone(); cursor.close(); db.close()
+    return jsonify({'id_pedido': id_pedido, 'total_produtos': float(total['total'])})
+
+# TRIGGER trg_historico_pedidos - quando muda status, trigger grava em Historico_Pedidos
+@app.route('/pedidos/<int:id_pedido>/status', methods=['PUT'])
+def atualizar_status(id_pedido):
+    novo_status = request.json.get('status')
+    db = conectar(); cursor = db.cursor()
+    cursor.execute('UPDATE Pedidos SET status = %s WHERE id_pedido = %s', (novo_status, id_pedido))
+    db.commit(); cursor.close(); db.close()
+    return jsonify({'msg': f'Status atualizado para {novo_status}. Trigger gravou no historico!'})
+
+@app.route('/historico')
+def ver_historico():
+    db = conectar(); cursor = db.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM Historico_Pedidos ORDER BY data_alteracao DESC')
+    dados = cursor.fetchall(); cursor.close(); db.close()
+    return jsonify(dados)
+
+# TRANSACAO com COMMIT / ROLLBACK via Python - igual Item 11 do script do colega
+@app.route('/pedidos', methods=['POST'])
+def criar_pedido_com_transacao():
+    dados = request.json
+    db = conectar()
+    try:
+        cursor = db.cursor()
+        db.start_transaction()
+        cursor.execute('INSERT INTO Pedidos (id_cliente, id_restaurante, status) VALUES (%s, %s, %s)', (dados['id_cliente'], dados['id_restaurante'], 'Preparando'))
+        id_novo = cursor.lastrowid
+        for item in dados['itens']:
+            cursor.execute('INSERT INTO Itens_Pedido (id_pedido, id_produto, quantidade) VALUES (%s, %s, %s)', (id_novo, item['id_produto'], item['quantidade']))
+        db.commit()
+        cursor.close(); db.close()
+        return jsonify({'msg': 'Pedido criado com COMMIT', 'id_pedido': id_novo})
+    except Exception as e:
+        db.rollback()
+        db.close()
+        return jsonify({'msg': 'Erro, ROLLBACK executado', 'erro': str(e)}), 500
+
+# Consulta avancada Item 5.1 do colega - produtos mais vendidos
+@app.route('/relatorio/mais-vendidos')
+def mais_vendidos():
+    db = conectar(); cursor = db.cursor(dictionary=True)
+    cursor.execute('SELECT prod.nome_produto, SUM(ip.quantidade) AS total_vendido FROM Itens_Pedido ip INNER JOIN Produtos prod ON ip.id_produto = prod.id_produto GROUP BY prod.id_produto, prod.nome_produto ORDER BY total_vendido DESC')
+    dados = cursor.fetchall(); cursor.close(); db.close()
+    return jsonify(dados)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
