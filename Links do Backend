@@ -1,0 +1,4 @@
+http://127.0.0.1:5000/pedidos
+http://127.0.0.1:5000/produtos
+http://127.0.0.1:5000/pedidos/1/total
+http://127.0.0.1:5000/relatorio/mais-vendidos
