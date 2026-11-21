@@ -44,7 +44,7 @@ http://127.0.0.1:5000/pedidos/cliente/1
 http://127.0.0.1:5000/pedidos/1/total
 http://127.0.0.1:5000/historico
 http://127.0.0.1:5000/relatorio/mais-vendidos
-
+obs: só poderá rodas os links se fizer a ativação no vscode com o comando ( python app_integracao.py )
 Resultado: {"status": "Integracao OK", "msg": "Python conectado no db_delivery_local!"}
 
 ### 7. Testar PUT e POST (Trigger e Transação)
@@ -54,14 +54,6 @@ curl -X POST http://127.0.0.1:5000/pedidos -H "Content-Type: application/json" -
 ### 8. Parar o servidor
 No terminal do VS Code: Ctrl + C
 
-## O que a integração usa do banco do colega
-VIEW vw_pedidos_completos - Rota /pedidos
-VIEW vw_produtos_restaurantes - Rota /produtos
-PROCEDURE consultar_pedidos_cliente - Rota /pedidos/cliente/1
-FUNCTION calcular_total_pedido - Rota /pedidos/1/total
-TRIGGER trg_historico_pedidos - Rota PUT /pedidos/1/status
-Transação com COMMIT / ROLLBACK - Rota POST /pedidos
-JOIN produtos mais vendidos - Rota /relatorio/mais-vendidos
 
 ## Arquivos da minha parte
 integracao-backend-python/app_integracao.py
