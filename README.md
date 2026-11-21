@@ -24,6 +24,8 @@ Conteúdo do requirements.txt:
 flask
 mysql-connector-python
 
+python app_integracao.py( use este comando depois de integrar o banco de dados para ter acesso ao backend no navegador )
+
 ### 4. Configuração da conexão no app_integracao.py
 def conectar():
     return mysql.connector.connect(host='localhost', user='root', password='Sh@zam123', database='db_delivery_local')
