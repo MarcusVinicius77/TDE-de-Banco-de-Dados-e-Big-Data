@@ -1,87 +1,115 @@
--- =================================================================
--- PROJETO: DATABASE DELIVERY LOCAL - SÃO LUÍS
--- Equipe: Marcus Vinicius, Ronaldo Lima, Kauan Filipe, Ricardo Henrique, Ytalo Emanuel
--- Item 1: Criação com PK, FK e relacionamento entre tabelas
--- Item 2: Povoamento + Integração com JOIN
--- Tema: Sistema de Delivery Local | Turma: 4º Período de Sistema de Informação
--- =================================================================
+-- ================================================================
+-- PROJETO: SISTEMA DE DELIVERY LOCAL - db_delivery_local
+-- ================================================================
+-- ITEM 0: CRIACAO DO BANCO
+-- ================================================================
 
-DROP DATABASE IF EXISTS db_delivery_local;
 CREATE DATABASE db_delivery_local;
+
 USE db_delivery_local;
 
--- =================================================================
--- ITEM 1: CRIAÇÃO DAS TABELAS RELACIONADAS
--- =================================================================
+-- ================================================================
+-- ITEM 1: CRIACAO DAS TABELAS 
+-- ================================================================
 
--- TABELA 1: Clientes (Quem pede) - PK id_cliente
 CREATE TABLE Clientes (
-    id_cliente INT AUTO_INCREMENT PRIMARY KEY, -- PK
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     telefone VARCHAR(20),
     bairro VARCHAR(50),
     endereco TEXT
-);
+) ENGINE=InnoDB;
 
--- TABELA 2: Restaurantes (Quem vende) - PK id_restaurante
 CREATE TABLE Restaurantes (
-    id_restaurante INT AUTO_INCREMENT PRIMARY KEY, -- PK
+    id_restaurante INT AUTO_INCREMENT PRIMARY KEY,
     nome_restaurante VARCHAR(100) NOT NULL,
     tipo_comida VARCHAR(50),
-    taxa_entrega DECIMAL(5,2)
-);
+    taxa_entrega DECIMAL(5,2) NOT NULL DEFAULT 0.00
+) ENGINE=InnoDB;
 
--- TABELA 3: Produtos (Cardápio, depende do restaurante)
--- FK: id_restaurante liga produto ao restaurante
 CREATE TABLE Produtos (
-    id_produto INT AUTO_INCREMENT PRIMARY KEY, -- PK
+    id_produto INT AUTO_INCREMENT PRIMARY KEY,
     nome_produto VARCHAR(100) NOT NULL,
     preco DECIMAL(6,2) NOT NULL,
-    id_restaurante INT NOT NULL, -- FK - De qual restaurante é esse produto
-    FOREIGN KEY (id_restaurante) REFERENCES Restaurantes(id_restaurante) ON DELETE CASCADE
-);
+    id_restaurante INT NOT NULL,
+    CONSTRAINT fk_produtos_restaurantes
+        FOREIGN KEY (id_restaurante)
+        REFERENCES Restaurantes(id_restaurante)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
--- TABELA 4: Pedidos (Tabela principal da INTEGRAÇÃO)
--- Liga Cliente com Restaurante - EXATAMENTE o que o líder pediu
 CREATE TABLE Pedidos (
-    id_pedido INT AUTO_INCREMENT PRIMARY KEY, -- PK do pedido
-    id_cliente INT NOT NULL, -- FK 1 - Quem pediu
-    id_restaurante INT NOT NULL, -- FK 2 - De onde pediu
-    data_pedido DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'Preparando',
-    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE,
-    FOREIGN KEY (id_restaurante) REFERENCES Restaurantes(id_restaurante) ON DELETE CASCADE
-);
+    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_restaurante INT NOT NULL,
+    data_pedido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) NOT NULL DEFAULT 'Preparando',
+    CONSTRAINT fk_pedidos_clientes
+        FOREIGN KEY (id_cliente)
+        REFERENCES Clientes(id_cliente)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_pedidos_restaurantes
+        FOREIGN KEY (id_restaurante)
+        REFERENCES Restaurantes(id_restaurante)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
--- TABELA 5: Itens_Pedido (Detalhe do pedido - N:N entre Pedidos e Produtos)
 CREATE TABLE Itens_Pedido (
     id_item INT AUTO_INCREMENT PRIMARY KEY,
-    id_pedido INT NOT NULL, -- FK para Pedido
-    id_produto INT NOT NULL, -- FK para Produto
+    id_pedido INT NOT NULL,
+    id_produto INT NOT NULL,
     quantidade INT NOT NULL,
-    FOREIGN KEY (id_pedido) REFERENCES Pedidos(id_pedido) ON DELETE CASCADE,
-    FOREIGN KEY (id_produto) REFERENCES Produtos(id_produto) ON DELETE CASCADE
-);
+    CONSTRAINT fk_itens_pedidos
+        FOREIGN KEY (id_pedido)
+        REFERENCES Pedidos(id_pedido)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_itens_produtos
+        FOREIGN KEY (id_produto)
+        REFERENCES Produtos(id_produto)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
--- =================================================================
--- ITEM 2: POVOAMENTO - EQUIPE COMPLETA
--- =================================================================
+-- ================================================================
+-- ITEM 2: RESTRICOES DE INTEGRIDADE
+-- ================================================================
 
--- Clientes - Equipe completa de 5 pessoas
+ALTER TABLE Produtos
+    ADD CONSTRAINT chk_produtos_preco CHECK (preco > 0);
+
+ALTER TABLE Restaurantes
+    ADD CONSTRAINT chk_restaurantes_taxa CHECK (taxa_entrega >= 0);
+
+ALTER TABLE Itens_Pedido
+    ADD CONSTRAINT chk_itens_quantidade CHECK (quantidade > 0);
+
+ALTER TABLE Pedidos
+    ADD CONSTRAINT chk_pedidos_status
+    CHECK (status IN (
+        'Preparando',
+        'Saiu para entrega',
+        'Entregue',
+        'Cancelado'
+    ));
+
+-- ================================================================
+-- ITEM 3: POVOAMENTO
+-- ================================================================
+
 INSERT INTO Clientes (nome, telefone, bairro, endereco) VALUES
 ('Marcus Vinicius', '(98) 98811-2233', 'Anjo da Guarda', 'Rua da Paz, 123'),
-('Ronaldo Lima', '(98) 98822-3344', 'Cohab Anil', 'Av. Principal, 456'),
-('Kauan Filipe', '(98) 98833-4455', 'Turú', 'Rua das Flores, 789'),
 ('Ricardo Henrique', '(98) 98844-5566', 'Maiobinha', 'Rua do Sol, 321'),
 ('Ytalo Emanuel', '(98) 98855-6677', 'Cohatrac', 'Av. Brasil, 654');
 
--- Restaurantes locais
 INSERT INTO Restaurantes (nome_restaurante, tipo_comida, taxa_entrega) VALUES
 ('Sabor Maranhense', 'Comida Típica', 5.00),
 ('Burguer São Luís', 'Lanches', 7.00),
 ('Açaí do Turu', 'Açaí e Sobremesas', 4.50);
 
--- Produtos (cardápio)
 INSERT INTO Produtos (nome_produto, preco, id_restaurante) VALUES
 ('Arroz de Cuxá com Peixe', 32.90, 1),
 ('Galinhada Maranhense', 28.50, 1),
@@ -89,29 +117,22 @@ INSERT INTO Produtos (nome_produto, preco, id_restaurante) VALUES
 ('Batata Frita G', 18.00, 2),
 ('Açaí 500ml com Toppings', 19.90, 3);
 
--- Pedidos - Integração Cliente + Restaurante - Um pedido para cada membro
 INSERT INTO Pedidos (id_cliente, id_restaurante, status) VALUES
-(1, 1, 'Entregue'), -- Marcus pediu no Sabor Maranhense
-(2, 2, 'Saiu para entrega'), -- Ronaldo no Burguer
-(3, 3, 'Preparando'), -- Kauan no Açaí
-(4, 1, 'Entregue'), -- Ricardo no Sabor Maranhense
-(5, 2, 'Preparando'); -- Ytalo no Burguer
+(1, 1, 'Entregue'),
+(2, 1, 'Entregue'),
+(3, 2, 'Preparando');
 
--- Itens de cada pedido
 INSERT INTO Itens_Pedido (id_pedido, id_produto, quantidade) VALUES
-(1, 1, 1), -- Marcus: 1x Arroz de Cuxá
-(2, 3, 2), -- Ronaldo: 2x X-Salada
-(3, 5, 1), -- Kauan: 1x Açaí
-(4, 2, 1), -- Ricardo: 1x Galinhada
-(5, 3, 1), -- Ytalo: 1x X-Salada
-(5, 4, 1); -- Ytalo: + 1x Batata
+(1, 1, 1),
+(2, 2, 1),
+(3, 3, 1),
+(3, 4, 1);
 
--- =================================================================
--- INTEGRAÇÃO COM JOIN - O QUE O LÍDER PEDIU
--- =================================================================
+-- ================================================================
+-- ITEM 4: CONSULTAS INICIAIS COM JOIN 
+-- ================================================================
 
--- SELECT 1: Mostra Pedido com nome do Cliente + nome do Restaurante
-SELECT 
+SELECT
     p.id_pedido,
     c.nome AS Cliente,
     r.nome_restaurante AS Restaurante,
@@ -120,8 +141,7 @@ FROM Pedidos p
 INNER JOIN Clientes c ON p.id_cliente = c.id_cliente
 INNER JOIN Restaurantes r ON p.id_restaurante = r.id_restaurante;
 
--- SELECT 2: INTEGRAÇÃO COMPLETA - Mostra tudo
-SELECT 
+SELECT
     cli.nome AS Cliente,
     rest.nome_restaurante AS Restaurante,
     prod.nome_produto AS Produto,
@@ -134,3 +154,258 @@ JOIN Restaurantes rest ON ped.id_restaurante = rest.id_restaurante
 JOIN Itens_Pedido ip ON ped.id_pedido = ip.id_pedido
 JOIN Produtos prod ON ip.id_produto = prod.id_produto
 ORDER BY ped.id_pedido;
+
+-- ================================================================
+-- ITEM 5: CONSULTAS AVANCADAS
+-- ================================================================
+
+-- 5.1 Produtos mais vendidos
+SELECT
+    prod.nome_produto,
+    SUM(ip.quantidade) AS total_vendido
+FROM Itens_Pedido ip
+INNER JOIN Produtos prod ON ip.id_produto = prod.id_produto
+GROUP BY prod.id_produto, prod.nome_produto
+ORDER BY total_vendido DESC;
+
+-- 5.2 Clientes que mais realizaram pedidos
+SELECT
+    c.nome,
+    COUNT(p.id_pedido) AS total_pedidos
+FROM Clientes c
+INNER JOIN Pedidos p ON c.id_cliente = p.id_cliente
+GROUP BY c.id_cliente, c.nome
+ORDER BY total_pedidos DESC;
+
+-- 5.3 Valor dos produtos por pedido (nao inclui taxa de entrega)
+SELECT
+    p.id_pedido,
+    c.nome AS cliente,
+    SUM(ip.quantidade * prod.preco) AS valor_produtos
+FROM Pedidos p
+INNER JOIN Clientes c ON p.id_cliente = c.id_cliente
+INNER JOIN Itens_Pedido ip ON p.id_pedido = ip.id_pedido
+INNER JOIN Produtos prod ON ip.id_produto = prod.id_produto
+GROUP BY p.id_pedido, c.nome
+ORDER BY p.id_pedido;
+
+-- 5.4 Quantidade de pedidos por status
+SELECT status, COUNT(*) AS quantidade_pedidos
+FROM Pedidos
+GROUP BY status;
+
+-- 5.5 Clientes que ainda nao realizaram pedidos
+SELECT c.id_cliente, c.nome
+FROM Clientes c
+LEFT JOIN Pedidos p ON p.id_cliente = c.id_cliente
+WHERE p.id_pedido IS NULL;
+
+-- ================================================================
+-- ITEM 6: INDICES E ANALISE DE CONSULTA
+-- ================================================================
+
+CREATE INDEX idx_pedidos_cliente
+    ON Pedidos(id_cliente);
+
+CREATE INDEX idx_pedidos_restaurante
+    ON Pedidos(id_restaurante);
+
+CREATE INDEX idx_itens_pedido
+    ON Itens_Pedido(id_pedido);
+
+CREATE INDEX idx_produtos_restaurante
+    ON Produtos(id_restaurante);
+
+-- EXPLAIN mostra o plano de execucao escolhido pelo MySQL.
+EXPLAIN
+SELECT *
+FROM Pedidos
+WHERE id_cliente = 1;
+
+-- ================================================================
+-- ITEM 7: VIEWS
+-- ================================================================
+
+CREATE VIEW vw_pedidos_completos AS
+SELECT
+    p.id_pedido,
+    c.nome AS cliente,
+    r.nome_restaurante AS restaurante,
+    p.data_pedido,
+    p.status
+FROM Pedidos p
+INNER JOIN Clientes c ON p.id_cliente = c.id_cliente
+INNER JOIN Restaurantes r ON p.id_restaurante = r.id_restaurante;
+
+CREATE VIEW vw_produtos_restaurantes AS
+SELECT
+    prod.id_produto,
+    prod.nome_produto,
+    prod.preco,
+    r.nome_restaurante,
+    r.tipo_comida
+FROM Produtos prod
+INNER JOIN Restaurantes r ON prod.id_restaurante = r.id_restaurante;
+
+-- Consultas de demonstracao das Views
+SELECT * FROM vw_pedidos_completos;
+SELECT * FROM vw_produtos_restaurantes;
+
+-- ================================================================
+-- ITEM 8: TABELA DE HISTORICO E TRIGGER
+-- ================================================================
+
+CREATE TABLE Historico_Pedidos (
+    id_historico INT AUTO_INCREMENT PRIMARY KEY,
+    id_pedido INT NOT NULL,
+    status_anterior VARCHAR(20),
+    novo_status VARCHAR(20),
+    data_alteracao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_historico_pedido
+        FOREIGN KEY (id_pedido)
+        REFERENCES Pedidos(id_pedido)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+DELIMITER //
+
+CREATE TRIGGER trg_historico_pedidos
+AFTER UPDATE ON Pedidos
+FOR EACH ROW
+BEGIN
+    IF NOT (OLD.status <=> NEW.status) THEN
+        INSERT INTO Historico_Pedidos (
+            id_pedido,
+            status_anterior,
+            novo_status
+        )
+        VALUES (
+            OLD.id_pedido,
+            OLD.status,
+            NEW.status
+        );
+    END IF;
+END //
+
+DELIMITER ;
+
+-- Teste do Trigger: altera o status do pedido 3.
+-- O Trigger registra automaticamente a mudanca no historico.
+UPDATE Pedidos
+SET status = 'Saiu para entrega'
+WHERE id_pedido = 3;
+
+SELECT * FROM Historico_Pedidos;
+
+-- ================================================================
+-- ITEM 9: STORED PROCEDURE
+-- ================================================================
+
+DELIMITER //
+
+CREATE PROCEDURE consultar_pedidos_cliente(
+    IN p_id_cliente INT
+)
+BEGIN
+    SELECT
+        p.id_pedido,
+        c.nome AS cliente,
+        r.nome_restaurante AS restaurante,
+        p.data_pedido,
+        p.status
+    FROM Pedidos p
+    INNER JOIN Clientes c ON p.id_cliente = c.id_cliente
+    INNER JOIN Restaurantes r ON p.id_restaurante = r.id_restaurante
+    WHERE p.id_cliente = p_id_cliente
+    ORDER BY p.data_pedido DESC;
+END //
+
+DELIMITER ;
+
+-- Teste da procedure
+CALL consultar_pedidos_cliente(1);
+
+-- ================================================================
+-- ITEM 10: FUNCTION
+-- ================================================================
+
+DELIMITER //
+
+CREATE FUNCTION calcular_total_pedido(
+    p_id_pedido INT
+)
+RETURNS DECIMAL(10,2)
+READS SQL DATA
+BEGIN
+    DECLARE v_total DECIMAL(10,2);
+
+    SELECT COALESCE(SUM(ip.quantidade * prod.preco), 0.00)
+    INTO v_total
+    FROM Itens_Pedido ip
+    INNER JOIN Produtos prod ON ip.id_produto = prod.id_produto
+    WHERE ip.id_pedido = p_id_pedido;
+
+    RETURN v_total;
+END //
+
+DELIMITER ;
+
+-- Teste da function
+SELECT
+    id_pedido,
+    calcular_total_pedido(id_pedido) AS valor_total_produtos
+FROM Pedidos
+ORDER BY id_pedido;
+
+-- ================================================================
+-- ITEM 11: TRANSACOES
+-- ================================================================
+
+-- 11.1 Exemplo de transacao confirmada (COMMIT).
+-- Registra um novo pedido e seus itens na mesma transacao.
+
+START TRANSACTION;
+
+INSERT INTO Pedidos (id_cliente, id_restaurante, status)
+VALUES (1, 1, 'Preparando');
+
+SET @novo_pedido = LAST_INSERT_ID();
+
+INSERT INTO Itens_Pedido (id_pedido, id_produto, quantidade)
+VALUES
+(@novo_pedido, 1, 1),
+(@novo_pedido, 2, 1);
+
+COMMIT;
+
+-- Conferir o pedido criado
+SELECT *
+FROM Pedidos
+WHERE id_pedido = @novo_pedido;
+
+SELECT *
+FROM Itens_Pedido
+WHERE id_pedido = @novo_pedido;
+
+-- 11.2 Exemplo de transacao desfeita (ROLLBACK).
+-- A insercao abaixo e valida, mas sera desfeita pelo ROLLBACK.
+
+START TRANSACTION;
+
+INSERT INTO Pedidos (id_cliente, id_restaurante, status)
+VALUES (2, 1, 'Preparando');
+
+SET @pedido_cancelado_teste = LAST_INSERT_ID();
+
+ROLLBACK;
+
+-- O SELECT abaixo nao deve retornar o pedido desfeito.
+SELECT *
+FROM Pedidos
+WHERE id_pedido = @pedido_cancelado_teste;
+
+
+-- ================================================================
+-- FIM DO SCRIPT
+-- ================================================================
