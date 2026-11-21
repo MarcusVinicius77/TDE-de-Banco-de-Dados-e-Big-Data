@@ -11,6 +11,8 @@ No MySQL Workbench: File > Open SQL Script > Abrir db_delivery_01.sql > Clicar n
 cd "C:\Users\vinic\Documents\projetos-backend"
 code .
 
+obs:assim que abrir o projeto utilize o script de integração que está no README de "Integração-Backend-Python"
+
 ### 3. Instalar dependências(no terminal do vscode depois de rodar o script)
 pip install flask
 
